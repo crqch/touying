@@ -1212,8 +1212,10 @@
 /// - relative (bool): If `true`, `n` is a relative offset from the current subslide counter.
 ///   If `false` (default), `n` is an absolute target subslide number.
 ///
+/// - cover (function, auto): An optional cover function to use for the content after this jump. If `auto` (default), uses the default cover method from the theme.
+///
 /// -> content
-#let jump(n, relative: false) = {
+#let jump(n, relative: false, cover: auto) = {
   if relative {
     assert(
       type(n) == int and n != 0,
@@ -1231,6 +1233,7 @@
     kind: "touying-jump/pause/meanwhile",
     n: n,
     relative: relative,
+    cover: cover,
   ))<touying-temporary-mark>]
 }
 
@@ -1239,6 +1242,12 @@
 ///
 /// -> content
 #let pause = jump(1, relative: true)
+
+
+/// Reveal the next subslide with a transparent cover. Content after `#tpause` appears with 50% opacity before it is revealed. Equivalent to `#jump(1, relative: true, cover: utils.semi-transparent-cover.with(alpha: 50%))`.
+///
+/// -> content
+#let tpause = jump(1, relative: true, cover: utils.semi-transparent-cover.with(alpha: 50%))
 
 
 /// Reset the subslide counter back to 1, allowing content after `#meanwhile` to appear simultaneously with content from subslide 1. Equivalent to `#jump(1)`.
@@ -4286,6 +4295,13 @@
       ) {
         let kind = it.body.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
+          let new-cover = it.body.value.at("cover", default: auto)
+          if new-cover == auto {
+            new-cover = self.methods.cover.with(self: self)
+          } else if type(new-cover) == function {
+            new-cover = new-cover.with(self: self)
+          }
+          cover = new-cover
           if it.body.value.relative {
             repetitions = calc.max(repetitions, last-subslide) + it.body.value.n
           } else {
@@ -4447,6 +4463,19 @@
       ) {
         let kind = child.value.at("kind", default: none)
         if kind == "touying-jump/pause/meanwhile" {
+          let new-cover = child.value.at("cover", default: auto)
+          if new-cover == auto {
+            new-cover = self.methods.cover.with(self: self)
+          } else if type(new-cover) == function {
+            new-cover = new-cover.with(self: self)
+          }
+          if new-cover != cover {
+            if hidden-parts.len() != 0 {
+              result.push(cover-hidden(cover, hidden-parts, result))
+              hidden-parts = ()
+            }
+            cover = new-cover
+          }
           if child.value.relative {
             // Snap past any preceding fn-wrapper range before applying the
             // relative jump, so that a #pause after e.g. item-by-item lands

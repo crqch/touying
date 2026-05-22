@@ -21,6 +21,7 @@
   not-wp,
   only,
   pause,
+  tpause,
   prev-wp,
   slide,
   speaker-note,

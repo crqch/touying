@@ -1441,7 +1441,7 @@
         //calculate the extra required padding on top and bottom bc the non-covered text gives this to the layout, but wrapping text twice in a box kills it.
         // this is required when you switch between non-text block to text block or the size changes, but somehow the spacing gets eaten when two large text blocks follow each other, then this is wrong. but we cannot detect that.
         let extra = if (
-          (body.has("body") and body.body.func() == text)
+          (body.has("body") and type(body.body) == content and body.body.func() == text)
             or body.func() in (align, math.equation)
         ) {
           ((1.52 * measure(new-body-func([Xg])).height / text.size) - 1)
@@ -2727,8 +2727,8 @@
     et: "Sisukord",
     fi: "Sisällys",
     ja: "目次",
-    pl: "Agenda",
     ru: "Содержание",
+    pl: "Przegląd",
     zh-TW: "目錄",
     zh: "目录",
   )
